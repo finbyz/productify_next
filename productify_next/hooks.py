@@ -4,11 +4,17 @@ app_publisher = "Finbyz"
 app_description = "Productify Next"
 app_email = "info@finbyz.com"
 app_license = "mit"
-# required_apps = []
+
+on_session_creation = "productify_next.session.on_session_creation"
 
 # Includes in <head>
 # ------------------
-
+app_include_js = [
+    "https://cdn.plot.ly/plotly-latest.min.js",
+    "https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js",
+    "assets/productify_next/productify_next/setup.js",
+]
+# setup_wizard_requires = "assets/productify_next/setup.js"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/productify_next/css/productify_next.css"
 # app_include_js = "/assets/productify_next/js/productify_next.js"
@@ -28,15 +34,14 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Lead": "public/js/doctype_js/lead.js",
+    "Customer": "public/js/doctype_js/customer.js",
+    "Opportunity": "public/js/doctype_js/opportunity.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
-
-# Svg Icons
-# ------------------
-# include app icons in desk
-# app_include_icons = "productify_next/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -68,7 +73,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "productify_next.install.before_install"
-# after_install = "productify_next.install.after_install"
+# after_install = "productify_next.setup.install.after_install"
 
 # Uninstallation
 # ------------
@@ -122,18 +127,36 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    "Contact": {
+        "validate": "productify_next.productify_next.doc_events.contact.validate",
+    },
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
+    "all": [
+        "productify_next.schedule.bg_employee_log_generation",
+        "productify_next.schedule.schedule_comments",
+        "productify_next.schedule.create_productify_work_summary_today",
+    ],
+    "cron": {
+        "0 1 * * *": [
+            "productify_next.schedule.create_productify_work_summary",
+            "productify_next.schedule.delete_productify_error_logs",
+            "productify_next.schedule.delete_screenshots",
+            "productify_next.schedule.delete_application_logs",
+        ],
+        "0 0 * * *": [
+            "productify_next.schedule.submit_timesheet_created_by_productify",
+        ],
+        # "5 4 * * sun" :[
+        #     "productify_next.schedule.send_weekly_report",
+        # ]
+    },
+}
 # 	"all": [
 # 		"productify_next.tasks.all"
 # 	],
@@ -218,12 +241,14 @@ app_license = "mit"
 
 # auth_hooks = [
 # 	"productify_next.auth.validate"
-# ]
+# ]{task} - {issue}
 
-# Automatically update python controller files with type annotations for this app.
-# export_python_type_annotations = True
-
-# default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
-# }
-
+fixtures = [
+    {"dt": "Custom Field", "filters": [["fieldname", "=", "is_created_by_productify"]]},
+    {
+        "dt": "Activity Type",
+        "filters": [
+            ["name", "in", ["Project", "Task", "Issue"]]
+        ]
+    }
+]
